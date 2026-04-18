@@ -1,11 +1,21 @@
-# AI Code Reviewer
+# AI Tools & Code Reviewer
 
-基于 Groq (Llama-3/gpt-oss) 的自动化代码审查工具。
+基于 Groq 的 AI 开发工具集。
 
-## 功能
-- **核心逻辑 (`reviewer.py`)**: 支持代码字符串和文件输入，自动识别语言并进行全维度 Review。
-- **命令行界面 (`cli.py`)**: 提供彩色格式化输出，方便开发者在终端快速查看建议。
-- **Web UI (`app.py`)**: 使用 Streamlit 构建，左侧输入/上传代码，右侧按严重程度分组展示 Review 结果。
+## 项目结构
+```
+ai-tools/
+├── code_review/         # AI 代码审查工具
+│   ├── reviewer.py      # 核心逻辑 (5-tier 级联模型)
+│   ├── cli.py           # 彩色命令行界面
+│   └── app.py           # 现代化 Web UI
+├── tech_decision/       # AI 技术决策顾问
+│   ├── advisor.py       # 架构师逻辑 (5-tier 级联模型)
+│   ├── cli.py           # 决策分析 CLI
+│   └── app.py           # 带雷达图的 Web UI
+├── requirements.txt
+└── README.md
+```
 
 ## 快速开始
 
@@ -15,33 +25,42 @@ pip install -r requirements.txt
 ```
 
 ### 2. 配置 API Key
-在项目根目录创建 `.env` 文件，并添加你的 Groq API Key：
+在根目录创建 `.env`：
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=your_key
 ```
 
-### 3. 使用 CLI
+### 3. 使用 AI 代码审查 (Code Reviewer)
 ```bash
-# 审查文件
-python -m code_review.cli review path/to/your/file.py
-
-# 审查代码字符串
-python -m code_review.cli review --code "def my_func(): pass"
+# 进入目录
+cd code_review
+# CLI
+python cli.py review ../test_code.py
+# Web UI
+streamlit run app.py
 ```
 
-### 4. 运行 Web UI
+### 4. 使用 AI 技术决策顾问 (Tech Decision Advisor)
+#### CLI 模式
 ```bash
-streamlit run code_review/app.py
+# 进入目录
+cd tech_decision
+
+# 模式1: 方案生成
+python cli.py generate "我们需要一个支持千万级日活的实时聊天系统"
+
+# 模式2: 方案评估
+python cli.py evaluate "使用 Redis 存储聊天记录，MySQL 存储用户信息"
 ```
 
-## 项目结构
+#### Web UI 模式
+```bash
+# 进入目录
+cd tech_decision
+streamlit run app.py
 ```
-ai-tools/
-├── code_review/
-│   ├── reviewer.py      # 核心 Review 逻辑
-│   ├── cli.py           # CLI 入口
-│   ├── app.py           # Streamlit Web UI
-│   └── prompts.py       # prompt 管理
-├── requirements.txt
-└── README.md
-```
+
+## 功能亮点
+- **5-tier 模型级联**: 自动在顶级模型 (gpt-oss-120b) 与备用模型间切换，确保高可用。
+- **维度评估**: 技术方案评估支持 6 个核心维度，并以雷达图可视化展示。
+- **现代化 UI**: 深度定制的 Streamlit 界面，提供 IDE 级的视觉体验。

@@ -2,3 +2,4 @@ groq
 streamlit
 rich
 python-dotenv
+plotly
