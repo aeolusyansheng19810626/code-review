@@ -4,7 +4,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.columns import Columns
-from .advisor import TechAdvisor
+from advisor import TechAdvisor
 
 console = Console()
 
@@ -42,13 +42,31 @@ def display_evaluation(result: dict):
     console.print(Panel(f"[bold]Solution:[/bold] {result['solution_name']}\n[bold]Overall Score:[/bold] [{score_color}]{result['overall_score']}/10[/{score_color}]\n[bold]Decision:[/bold] {result['decision']}", border_style="blue"))
 
     table = Table(title="Dimension Analysis", show_header=True, header_style="bold magenta")
-    table.add_column("Dimension")
-    table.add_column("Score")
+    table.add_column("Dimension", width=15)
+    table.add_column("Score", justify="right")
+    table.add_column("Visual", width=25)
     table.add_column("Analysis")
     
     for dim in result['dimensions']:
-        d_color = "green" if dim['score'] >= 8 else "yellow" if dim['score'] >= 6 else "red"
-        table.add_row(dim['name'], f"[{d_color}]{dim['score']}[/{d_color}]", dim['analysis'])
+        # 确保 score 是数值类型
+        try:
+            score = float(dim['score'])
+        except (ValueError, TypeError):
+            score = 0
+            
+        d_color = "green" if score >= 8 else "yellow" if score >= 6 else "red"
+        
+        # 使用实心方块 █ 渲染进度条，共 10 格
+        bar_filled = int(score)
+        bar_empty = 10 - bar_filled
+        bar_str = f"{'█' * bar_filled}{' ' * bar_empty}"
+        
+        table.add_row(
+            dim['name'], 
+            f"[{d_color}]{score}/10[/{d_color}]", 
+            f"[{d_color}][{bar_str}][/{d_color}]",
+            dim['analysis']
+        )
     
     console.print(table)
     

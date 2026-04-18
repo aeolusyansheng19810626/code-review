@@ -3,13 +3,12 @@ import json
 import plotly.graph_objects as go
 from advisor import TechAdvisor
 
+# Page configuration
 st.set_page_config(page_title="AI Tech Decision Advisor", layout="wide")
 
 def create_radar_chart(dimensions):
     categories = [d['name'] for d in dimensions]
     scores = [d['score'] for d in dimensions]
-    
-    # Repeat the first element to close the radar
     categories.append(categories[0])
     scores.append(scores[0])
 
@@ -24,14 +23,10 @@ def create_radar_chart(dimensions):
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 10]
-            )),
+            radialaxis=dict(visible=True, range=[0, 10])
+        ),
         showlegend=False,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font_color='#e2e8f0'
+        margin=dict(l=40, r=40, t=40, b=40)
     )
     return fig
 
@@ -39,91 +34,89 @@ def main():
     st.title("💡 AI Tech Decision Advisor")
     st.markdown("---")
 
-    mode = st.radio("Select Mode", ["Requirement -> Solution Generation", "Existing Solution Evaluation"], horizontal=True)
+    mode = st.radio("选择模式", ["需求 → 方案生成", "已有方案深度评估"], horizontal=True)
 
     col_input, col_result = st.columns([1, 2], gap="large")
 
     with col_input:
-        st.subheader("Input")
-        if mode == "Requirement -> Solution Generation":
-            input_text = st.text_area("Describe your technical requirement:", height=300, placeholder="e.g., We need a high-concurrency message queue system for 10M messages/day.")
+        st.subheader("输入内容")
+        if mode == "需求 → 方案生成":
+            input_text = st.text_area("描述您的技术需求:", height=300, placeholder="例如：我们需要一个高并发的消息队列系统...")
         else:
-            input_text = st.text_area("Describe your existing technical solution:", height=300, placeholder="e.g., Use Redis as a message queue for 10M messages/day.")
+            input_text = st.text_area("描述您的技术方案:", height=300, placeholder="例如：使用 Redis 做消息队列，预计日消息量1000万...")
 
-        api_key = st.text_input("Groq API Key (Optional)", type="password")
-        action_btn = st.button("Generate Advice", type="primary")
+        api_key = st.text_input("Groq API Key (可选)", type="password", placeholder="gsk_...")
+        action_btn = st.button("开始分析", type="primary")
 
     with col_result:
-        st.subheader("Advice")
+        st.subheader("分析结果")
+        
         if action_btn and input_text:
-            with st.spinner("Analyzing with AI Architecture Advisor..."):
+            with st.spinner("AI 架构师正在思考中..."):
                 try:
                     advisor = TechAdvisor(api_key=api_key if api_key else None)
-                    if mode == "Requirement -> Solution Generation":
+                    if mode == "需求 → 方案生成":
                         result = advisor.generate_solutions(input_text)
                         
                         if "error" in result:
                             st.error(result['error'])
                         else:
-                            st.info(f"**Requirement Summary:** {result['requirement']}")
+                            st.info(f"**需求摘要:** {result['requirement']}")
                             
                             cols = st.columns(3)
                             for idx, sol in enumerate(result['solutions']):
                                 with cols[idx]:
                                     is_rec = sol['id'] == result['recommendation']
                                     if is_rec:
-                                        st.success(f"🏆 **{sol['name']}**")
+                                        st.success(f"🏆 **{sol['name']} (推荐)**")
                                     else:
                                         st.markdown(f"### {sol['name']}")
                                     
                                     st.write(sol['description'])
-                                    st.markdown("**Tech Stack:** " + ", ".join(sol['tech_stack']))
+                                    st.markdown("**技术栈:** " + ", ".join(sol['tech_stack']))
                                     
-                                    with st.expander("Pros & Cons"):
-                                        st.markdown("**Pros:**")
+                                    with st.expander("优缺点分析"):
+                                        st.markdown("**优点:**")
                                         for p in sol['pros']: st.write(f"- {p}")
-                                        st.markdown("**Cons:**")
+                                        st.markdown("**缺点:**")
                                         for c in sol['cons']: st.write(f"- {c}")
                                     
-                                    st.markdown(f"- **Complexity:** {sol['complexity']}")
-                                    st.markdown(f"- **Cost:** {sol['cost']}")
-                                    st.markdown(f"- **Timeline:** {sol['timeline']}")
-                            
-                            st.success(f"**Recommendation Reasoning:**\n\n{result['recommendation_reasoning']}")
+                                    st.markdown(f"**复杂度:** {sol['complexity']} | **成本:** {sol['cost']}")
+
+                            st.success(f"**推荐理由:**\n\n{result['recommendation_reasoning']}")
                     else:
                         result = advisor.evaluate_solution(input_text)
                         if "error" in result:
                             st.error(result['error'])
                         else:
-                            col_score, col_radar = st.columns([1, 2])
-                            with col_score:
-                                st.metric("Overall Score", f"{result['overall_score']}/10")
-                                st.markdown(f"**Decision:** {result['decision']}")
-                                st.markdown(f"**Reasoning:** {result['decision_reasoning']}")
+                            c1, c2 = st.columns([1, 2])
+                            with c1:
+                                st.metric("综合评分", f"{result['overall_score']}/10")
+                                st.markdown(f"**最终决策:** `{result['decision']}`")
+                                st.write(result['decision_reasoning'])
                             
-                            with col_radar:
-                                fig = create_radar_chart(result['dimensions'])
-                                st.plotly_chart(fig, use_container_width=True)
+                            with c2:
+                                st.plotly_chart(create_radar_chart(result['dimensions']), use_container_width=True)
                             
-                            st.markdown("### Dimension Analysis")
+                            st.markdown("### 维度评估详情")
                             for dim in result['dimensions']:
                                 with st.expander(f"{dim['name']} - {dim['score']}/10"):
                                     st.write(dim['analysis'])
                                     if dim['risks']:
-                                        st.markdown("**Risks:**")
+                                        st.markdown("**风险点:**")
                                         for r in dim['risks']: st.write(f"- {r}")
                                     if dim['suggestions']:
-                                        st.markdown("**Suggestions:**")
+                                        st.markdown("**改进建议:**")
                                         for s in dim['suggestions']: st.write(f"- {s}")
-                            
-                            if result.get('alternatives'):
-                                st.markdown("### Alternatives")
-                                for alt in result['alternatives']: st.write(f"- {alt}")
-
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
-        elif action_btn:
-            st.warning("Please enter some text to analyze.")
+                    st.error(f"系统错误: {str(e)}")
+        else:
+            st.markdown("""
+                <div style="height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:gray;">
+                    <div style="font-size:48px; opacity:0.3;">🧠</div>
+                    <p>在左侧输入您的技术问题，AI 架构师将为您提供专业建议。</p>
+                </div>
+            """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

@@ -12,14 +12,15 @@ TIER_UPPER_MID = "openai/gpt-oss-20b"
 TIER_MID       = "qwen/qwen3-32b"
 TIER_LOW       = "meta-llama/llama-4-scout-17b-16e-instruct"
 TIER_DEBUG     = "llama-3.1-8b-instant"
+TIER_FALLBACK  = "llama-3.3-70b-versatile" # 增加一个肯定存在的官方 ID
 
-QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_DEBUG]
+QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 class TechAdvisor:
     def __init__(self, api_key: str = None):
         api_key = api_key or os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise ValueError("Groq API key is required.")
+            raise ValueError("Groq API key is required. Please provide it in the input field or .env file.")
         self.client = Groq(api_key=api_key)
 
     def _call_ai(self, user_prompt: str) -> dict:
