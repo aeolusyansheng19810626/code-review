@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.streamlit/
+*.png
+*.jpg
+*.jpeg
+*.gif
+code_reviewer.html
+test_code.py
+test_sample.py
