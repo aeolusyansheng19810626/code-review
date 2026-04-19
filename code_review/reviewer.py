@@ -1,8 +1,15 @@
 import os
 import json
+from importlib import import_module
 from groq import Groq
 from dotenv import load_dotenv
-from prompts import REVIEW_SYSTEM_PROMPT, get_review_prompt
+
+try:
+    from code_review.prompts import REVIEW_SYSTEM_PROMPT, get_review_prompt
+except ImportError:
+    prompts = import_module("prompts")
+    REVIEW_SYSTEM_PROMPT = prompts.REVIEW_SYSTEM_PROMPT
+    get_review_prompt = prompts.get_review_prompt
 
 load_dotenv()
 

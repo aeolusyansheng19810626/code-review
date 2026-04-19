@@ -1,8 +1,16 @@
 import os
 import json
+from importlib import import_module
 from groq import Groq
 from dotenv import load_dotenv
-from prompts import ADVISOR_SYSTEM_PROMPT, get_generate_prompt, get_evaluate_prompt
+
+try:
+    from tech_decision.prompts import ADVISOR_SYSTEM_PROMPT, get_generate_prompt, get_evaluate_prompt
+except ImportError:
+    prompts = import_module("prompts")
+    ADVISOR_SYSTEM_PROMPT = prompts.ADVISOR_SYSTEM_PROMPT
+    get_generate_prompt = prompts.get_generate_prompt
+    get_evaluate_prompt = prompts.get_evaluate_prompt
 
 load_dotenv()
 
