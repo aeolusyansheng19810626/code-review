@@ -4,6 +4,7 @@ from importlib import import_module
 from groq import Groq
 from dotenv import load_dotenv
 
+from langsmith import traceable, get_current_run_tree
 try:
     from tech_decision.prompts import ADVISOR_SYSTEM_PROMPT, get_generate_prompt, get_evaluate_prompt
 except ImportError:
@@ -31,6 +32,7 @@ class TechAdvisor:
             raise ValueError("Groq API key is required. Please provide it in the input field or .env file.")
         self.client = Groq(api_key=api_key)
 
+    @traceable
     def _call_ai(self, user_prompt: str) -> dict:
         last_error = None
         for model in QUALITY_CASCADE:
@@ -47,6 +49,20 @@ class TechAdvisor:
                 result = chat_completion.choices[0].message.content
                 parsed = json.loads(result)
                 parsed["_model"] = model
+                
+                # LangSmith 上报 token
+                run = get_current_run_tree()
+                if run:
+                    usage = chat_completion.usage
+                    run.end(
+                        outputs={"output": parsed},
+                        metadata={
+                            "input_tokens": usage.prompt_tokens,
+                            "output_tokens": usage.completion_tokens,
+                            "total_tokens": usage.total_tokens,
+                            "model": model,
+                        }
+                    )
                 return parsed
             except Exception as e:
                 last_error = str(e)

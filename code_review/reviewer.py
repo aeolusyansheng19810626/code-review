@@ -4,6 +4,7 @@ from importlib import import_module
 from groq import Groq
 from dotenv import load_dotenv
 
+from langsmith import traceable, get_current_run_tree
 try:
     from code_review.prompts import REVIEW_SYSTEM_PROMPT, get_review_prompt
 except ImportError:
@@ -29,6 +30,7 @@ class CodeReviewer:
             raise ValueError("Groq API key is required. Set GROQ_API_KEY environment variable.")
         self.client = Groq(api_key=api_key)
 
+    @traceable
     def review_code(self, code: str) -> dict:
         """Review code string and return JSON result with fallback logic."""
         last_error = None
@@ -45,6 +47,20 @@ class CodeReviewer:
                 result = chat_completion.choices[0].message.content
                 parsed = json.loads(result)
                 parsed["_model"] = model
+                
+                # LangSmith 上报 token
+                run = get_current_run_tree()
+                if run:
+                    usage = chat_completion.usage
+                    run.end(
+                        outputs={"output": parsed},
+                        metadata={
+                            "input_tokens": usage.prompt_tokens,
+                            "output_tokens": usage.completion_tokens,
+                            "total_tokens": usage.total_tokens,
+                            "model": model,
+                        }
+                    )
                 return parsed
             except Exception as e:
                 last_error = str(e)

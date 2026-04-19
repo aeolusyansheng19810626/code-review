@@ -2,6 +2,7 @@ import os
 
 from groq import Groq
 
+from langsmith import traceable, get_current_run_tree
 from paper_reader.prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
 
 
@@ -17,6 +18,7 @@ TIER_DEBUG = "llama-3.1-8b-instant"
 QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 
+@traceable
 def read_paper(paper_text: str, model: str = TIER_TOP, return_model: bool = False) -> str:
     """对论文文本进行精读分析，返回 Markdown 格式报告。"""
     api_key = os.getenv("GROQ_API_KEY")
@@ -52,6 +54,20 @@ def read_paper(paper_text: str, model: str = TIER_TOP, return_model: bool = Fals
                 temperature=0.2,
             )
             result = chat_completion.choices[0].message.content
+            
+            # LangSmith 上报 token
+            run = get_current_run_tree()
+            if run:
+                usage = chat_completion.usage
+                run.end(
+                    outputs={"output": result},
+                    metadata={
+                        "input_tokens": usage.prompt_tokens,
+                        "output_tokens": usage.completion_tokens,
+                        "total_tokens": usage.total_tokens,
+                        "model": model_name,
+                    }
+                )
             return (result, model_name) if return_model else result
         except Exception as e:
             last_error = str(e)

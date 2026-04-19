@@ -5,8 +5,8 @@
 ## 上传信息
 
 - 上传者：Codex
-- 本次提交者：Codex
-- 本次提交内容：新增 `weekly_report`、`task_breakdown` 工具模块；为所有 AI 结果增加实际使用模型显示；同步更新统一入口和 README。
+- 本次提交者：Gemini
+- 本次提交内容：为所有 AI 模块集成 LangSmith 追踪和 Token 上报功能；更新 `requirements.txt` 和 README。
 
 ## 功能列表
 
@@ -78,9 +78,11 @@ pip install -r requirements.txt
 
 ```env
 GROQ_API_KEY=your_key
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_langsmith_key
 ```
 
-所有 AI 工具默认使用 Groq API，不需要 `ANTHROPIC_API_KEY`。
+所有 AI 工具默认使用 Groq API，不需要 `ANTHROPIC_API_KEY`。开启 LangSmith 后可在后台监控 Token 消耗。
 
 ### 3. 启动统一入口
 
@@ -186,6 +188,8 @@ openai/gpt-oss-120b
 
 ## 本次新增/修改功能
 
+- 集成 LangSmith 追踪：为 8 个 AI 模块的核心函数添加 `@traceable` 装饰器，实现全链路监控。
+- Token 消耗上报：在 AI 返回结果后，实时上报 `input_tokens`、`output_tokens`、`total_tokens` 及模型元数据至 LangSmith。
 - 新增 `weekly_report`：输入本周工作、下周计划等信息，生成 Markdown 技术周报。
 - 新增 `task_breakdown`：输入需求、技术栈和团队规模，生成结构化任务拆解清单。
 - 修改统一入口 `app.py`：侧边栏新增 `技术周报` 和 `需求拆解`，目前共 8 个工具。

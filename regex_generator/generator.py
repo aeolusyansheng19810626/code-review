@@ -2,6 +2,7 @@ import os
 
 from groq import Groq
 
+from langsmith import traceable, get_current_run_tree
 from regex_generator.prompts import SYSTEM_PROMPT, USER_PROMPT
 
 
@@ -15,6 +16,7 @@ TIER_DEBUG = "llama-3.1-8b-instant"
 QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 
+@traceable
 def generate_regex(
     description: str,
     language: str = "Python",
@@ -50,6 +52,20 @@ def generate_regex(
                 temperature=0.2,
             )
             result = chat_completion.choices[0].message.content
+            
+            # LangSmith 上报 token
+            run = get_current_run_tree()
+            if run:
+                usage = chat_completion.usage
+                run.end(
+                    outputs={"output": result},
+                    metadata={
+                        "input_tokens": usage.prompt_tokens,
+                        "output_tokens": usage.completion_tokens,
+                        "total_tokens": usage.total_tokens,
+                        "model": model_name,
+                    }
+                )
             return (result, model_name) if return_model else result
         except Exception as e:
             last_error = str(e)

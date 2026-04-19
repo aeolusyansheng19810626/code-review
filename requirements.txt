@@ -4,3 +4,4 @@ rich
 python-dotenv
 plotly
 pdfplumber
+langsmith
