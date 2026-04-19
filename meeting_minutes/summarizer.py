@@ -17,7 +17,7 @@ TIER_DEBUG = "llama-3.1-8b-instant"
 QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 
-def summarize(transcript: str, mode: str = "full", model: str = TIER_TOP) -> str:
+def summarize(transcript: str, mode: str = "full", model: str = TIER_TOP, return_model: bool = False) -> str:
     """
     生成会议纪要。
     mode: "brief" 要点摘要 | "full" 完整纪要
@@ -49,9 +49,11 @@ def summarize(transcript: str, mode: str = "full", model: str = TIER_TOP) -> str
                 max_tokens=4096,
                 temperature=0.2,
             )
-            return chat_completion.choices[0].message.content
+            result = chat_completion.choices[0].message.content
+            return (result, model_name) if return_model else result
         except Exception as e:
             last_error = str(e)
             continue
 
-    return f"纪要生成失败：所有模型均不可用。最后错误：{last_error}"
+    result = f"纪要生成失败：所有模型均不可用。最后错误：{last_error}"
+    return (result, "") if return_model else result

@@ -60,6 +60,8 @@ TOOLS = [
     ("", "会议纪要", "meeting_minutes"),
     ("", "SQL 优化", "sql_optimizer"),
     ("", "正则生成器", "regex_generator"),
+    ("", "技术周报", "weekly_report"),
+    ("", "需求拆解", "task_breakdown"),
 ]
 
 if "active_tool" not in st.session_state:
@@ -126,6 +128,9 @@ def render_code_review():
         if "error" in result:
             st.error(result["error"])
             return
+
+        if result.get("_model"):
+            st.caption(f"使用模型：{result['_model']}")
 
         score = result.get("score", 0)
         c1, c2 = st.columns([1, 3])
@@ -198,6 +203,8 @@ def render_tech_decision():
         return
 
     st.markdown("---")
+    if result.get("_model"):
+        st.caption(f"使用模型：{result['_model']}")
     if mode == "需求生成方案":
         st.info(f"**需求摘要：** {result.get('requirement', '')}")
         solutions = result.get("solutions", [])
@@ -282,12 +289,14 @@ def render_paper_reader():
 
     with st.spinner("AI 正在精读…"):
         try:
-            result = read_paper(paper_text)
+            result, used_model = read_paper(paper_text, return_model=True)
         except Exception as e:
             st.error(str(e))
             return
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
     st.download_button("下载报告（Markdown）", result, "paper_report.md", "text/markdown")
 
@@ -313,12 +322,14 @@ def render_meeting_minutes():
 
     with st.spinner("AI 正在生成纪要…"):
         try:
-            result = summarize(transcript, mode=mode_key)
+            result, used_model = summarize(transcript, mode=mode_key, return_model=True)
         except Exception as e:
             st.error(str(e))
             return
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
     st.download_button("下载纪要（Markdown）", result, "meeting_minutes.md", "text/markdown")
 
@@ -348,12 +359,14 @@ def render_sql_optimizer():
 
     with st.spinner("AI 正在分析…"):
         try:
-            result = optimize_sql(sql, db_type=db_type, schema_info=schema_info)
+            result, used_model = optimize_sql(sql, db_type=db_type, schema_info=schema_info, return_model=True)
         except Exception as e:
             st.error(str(e))
             return
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
     st.download_button("下载报告（Markdown）", result, "sql_report.md", "text/markdown")
 
@@ -386,14 +399,112 @@ def render_regex_generator():
 
     with st.spinner("AI 正在生成…"):
         try:
-            result = generate_regex(description, language=language, samples=samples)
+            result, used_model = generate_regex(description, language=language, samples=samples, return_model=True)
         except Exception as e:
             st.error(str(e))
             return
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
     st.download_button("下载结果（Markdown）", result, "regex_result.md", "text/markdown")
+
+
+def render_weekly_report():
+    st.markdown(
+        '<div class="tool-header"><p class="tool-title">技术周报生成</p>'
+        '<p class="tool-desc">输入本周工作内容，AI 自动生成格式规范的技术周报</p></div>',
+        unsafe_allow_html=True,
+    )
+    from weekly_report.generator import generate_report
+
+    col1, col2 = st.columns(2)
+    with col1:
+        author = st.text_input("姓名/团队", placeholder="张伟 / 后端团队")
+    with col2:
+        week = st.text_input("周次", placeholder="2026年第16周")
+    content = st.text_area(
+        "本周工作内容",
+        height=200,
+        placeholder="随意填写，例如：\n- 修复了登录超时 bug\n- 完成了消息推送模块开发\n- 参加了架构评审会议",
+    )
+    next_plan = st.text_area(
+        "下周计划（可选）",
+        height=100,
+        placeholder="例如：\n- 开始数据导出功能开发\n- 优化首页加载速度",
+    )
+    run = st.button("生成周报", type="primary")
+
+    if not run:
+        return
+    if not content.strip():
+        st.warning("请先填写本周工作内容。")
+        return
+
+    with st.spinner("AI 正在生成周报…"):
+        try:
+            result, used_model = generate_report(
+                content,
+                author=author,
+                week=week,
+                next_plan=next_plan,
+                return_model=True,
+            )
+        except Exception as e:
+            st.error(str(e))
+            return
+
+    st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
+    st.markdown(result)
+    st.download_button("下载周报（Markdown）", result, "weekly_report.md", "text/markdown")
+
+
+def render_task_breakdown():
+    st.markdown(
+        '<div class="tool-header"><p class="tool-title">需求拆解</p>'
+        '<p class="tool-desc">输入需求描述，AI 自动拆解为可执行工程任务清单</p></div>',
+        unsafe_allow_html=True,
+    )
+    from task_breakdown.generator import break_down_tasks
+
+    requirement = st.text_area(
+        "需求描述",
+        height=180,
+        placeholder="例如：开发一个支持用户注册、登录、个人资料编辑和权限管理的后台系统",
+    )
+    col1, col2 = st.columns(2)
+    with col1:
+        tech_stack = st.text_input("技术栈（可选）", placeholder="例如：Python, FastAPI, PostgreSQL, React")
+    with col2:
+        team_size = st.text_input("团队规模（可选）", placeholder="例如：2名前端、3名后端、1名测试")
+    run = st.button("开始拆解", type="primary")
+
+    if not run:
+        return
+    if not requirement.strip():
+        st.warning("请先填写需求描述。")
+        return
+
+    with st.spinner("AI 正在拆解需求…"):
+        try:
+            result, used_model = break_down_tasks(
+                requirement,
+                tech_stack=tech_stack,
+                team_size=team_size,
+                return_model=True,
+            )
+        except Exception as e:
+            st.error(str(e))
+            return
+
+    st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
+    st.markdown(result)
+    st.download_button("下载任务清单（Markdown）", result, "task_breakdown.md", "text/markdown")
 
 
 tool = st.session_state.active_tool
@@ -409,3 +520,7 @@ elif tool == "sql_optimizer":
     render_sql_optimizer()
 elif tool == "regex_generator":
     render_regex_generator()
+elif tool == "weekly_report":
+    render_weekly_report()
+elif tool == "task_breakdown":
+    render_task_breakdown()

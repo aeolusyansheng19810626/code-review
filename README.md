@@ -1,11 +1,12 @@
 # AI 工具箱
 
-基于 Groq 的软件工程师效率工具集合。项目提供统一 Streamlit 入口，也保留部分工具的独立 CLI / Web 页面，适合用于代码审查、技术方案分析、论文精读、会议纪要、SQL 优化和正则表达式生成。
+基于 Groq 的软件工程师效率工具集合。项目提供统一 Streamlit 入口，也保留部分工具的独立 CLI / Web 页面，适合用于代码审查、技术方案分析、论文精读、会议纪要、SQL 优化、正则表达式生成、技术周报和需求拆解。
 
 ## 上传信息
 
 - 上传者：Codex
-- 本次更新内容：新增统一入口 `app.py`，新增 `paper_reader`、`meeting_minutes`、`sql_optimizer`、`regex_generator` 工具模块，并调整 `code_review` 与 `tech_decision` 的根目录运行兼容性。
+- 本次提交者：Codex
+- 本次提交内容：新增 `weekly_report`、`task_breakdown` 工具模块；为所有 AI 结果增加实际使用模型显示；同步更新统一入口和 README。
 
 ## 功能列表
 
@@ -17,6 +18,8 @@
 | 会议纪要 | `meeting_minutes` | 粘贴会议记录，生成完整纪要或简洁要点摘要 |
 | SQL 优化 | `sql_optimizer` | 分析 SQL 查询性能，给出索引建议、结构优化和优化后 SQL |
 | 正则生成器 | `regex_generator` | 根据自然语言需求生成正则表达式、解释和使用示例 |
+| 技术周报 | `weekly_report` | 输入本周工作内容，生成格式规范的技术周报 |
+| 需求拆解 | `task_breakdown` | 输入需求描述，拆解为含优先级、工时、依赖关系的任务清单 |
 
 ## 项目结构
 
@@ -47,6 +50,12 @@ ai-tools/
 │   ├── optimizer.py
 │   └── prompts.py
 ├── regex_generator/          # 正则表达式生成工具
+│   ├── generator.py
+│   └── prompts.py
+├── weekly_report/            # 技术周报生成工具
+│   ├── generator.py
+│   └── prompts.py
+├── task_breakdown/           # 需求拆解工具
 │   ├── generator.py
 │   └── prompts.py
 ├── requirements.txt
@@ -167,16 +176,21 @@ openai/gpt-oss-120b
 → llama-3.1-8b-instant
 ```
 
+页面和 CLI 会在结果上方显示本次实际使用的模型，例如：
+
+```text
+使用模型：openai/gpt-oss-120b
+```
+
+如果高级模型失败并降级，这里会显示最终成功返回结果的 fallback 模型。
+
 ## 本次新增/修改功能
 
-- 新增统一 Streamlit 入口 `app.py`，通过侧边栏切换所有工具。
-- 新增 `paper_reader`：支持 PDF / 文本论文精读，输出 Markdown 报告。
-- 新增 `meeting_minutes`：支持完整会议纪要和简洁摘要两种模式。
-- 新增 `sql_optimizer`：支持 MySQL、PostgreSQL、SQLite、Oracle、SQL Server 的 SQL 优化建议。
-- 新增 `regex_generator`：根据自然语言需求生成正则表达式、解释和示例。
-- 修改 `code_review/app.py`：改为浅色 Streamlit 风格，降低视觉刺激。
-- 修改 `code_review/reviewer.py` 和 `tech_decision/advisor.py`：兼容从项目根目录按包导入运行。
-- 修改新增工具的模型调用：统一使用 `GROQ_API_KEY`，不依赖 Anthropic / Claude。
+- 新增 `weekly_report`：输入本周工作、下周计划等信息，生成 Markdown 技术周报。
+- 新增 `task_breakdown`：输入需求、技术栈和团队规模，生成结构化任务拆解清单。
+- 修改统一入口 `app.py`：侧边栏新增 `技术周报` 和 `需求拆解`，目前共 8 个工具。
+- 修改所有 Groq 工具：在结果上方展示实际使用模型，便于确认推理来源。
+- 保持模型策略统一：所有新增工具使用 `GROQ_API_KEY` 和 Groq 模型级联，不依赖 Anthropic / Claude。
 
 ## 注意事项
 

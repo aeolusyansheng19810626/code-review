@@ -43,7 +43,9 @@ class CodeReviewer:
                     response_format={"type": "json_object"},
                 )
                 result = chat_completion.choices[0].message.content
-                return json.loads(result)
+                parsed = json.loads(result)
+                parsed["_model"] = model
+                return parsed
             except Exception as e:
                 last_error = str(e)
                 # 如果是 404/400 (模型不存在) 或 429 (额度限制)，尝试下一个

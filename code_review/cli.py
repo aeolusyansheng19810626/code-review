@@ -13,6 +13,9 @@ def display_review(result: dict):
         console.print(f"[bold red]Error:[/bold red] {result['error']}")
         return
 
+    if result.get('_model'):
+        console.print(f"[dim]Model: {result['_model']}[/dim]")
+
     # Summary Panel
     score_color = "green" if result['score'] >= 8 else "yellow" if result['score'] >= 6 else "red"
     summary_text = f"[bold]Score:[/bold] [{score_color}]{result['score']}/10[/{score_color}]\n[bold]Summary:[/bold] {result['summary']}"

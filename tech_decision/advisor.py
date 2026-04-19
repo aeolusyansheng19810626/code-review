@@ -45,7 +45,9 @@ class TechAdvisor:
                     temperature=0.2
                 )
                 result = chat_completion.choices[0].message.content
-                return json.loads(result)
+                parsed = json.loads(result)
+                parsed["_model"] = model
+                return parsed
             except Exception as e:
                 last_error = str(e)
                 continue

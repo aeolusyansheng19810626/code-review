@@ -32,9 +32,11 @@ if st.button("开始精读", type="primary"):
     with st.spinner("AI 正在精读论文，请稍候…"):
         from paper_reader.reader import read_paper
 
-        result = read_paper(paper_text)
+        result, used_model = read_paper(paper_text, return_model=True)
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
 
     st.download_button(

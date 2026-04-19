@@ -61,6 +61,8 @@ def main():
                         if "error" in result:
                             st.error(result['error'])
                         else:
+                            if result.get('_model'):
+                                st.caption(f"使用模型：{result['_model']}")
                             st.info(f"**需求摘要:** {result['requirement']}")
                             
                             cols = st.columns(3)
@@ -89,6 +91,8 @@ def main():
                         if "error" in result:
                             st.error(result['error'])
                         else:
+                            if result.get('_model'):
+                                st.caption(f"使用模型：{result['_model']}")
                             c1, c2 = st.columns([1, 2])
                             with c1:
                                 st.metric("综合评分", f"{result['overall_score']}/10")

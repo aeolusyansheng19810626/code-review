@@ -2,10 +2,8 @@ import os
 
 from groq import Groq
 
-from paper_reader.prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from task_breakdown.prompts import SYSTEM_PROMPT, USER_PROMPT
 
-
-MAX_CHARS = 80000  # 约20000 tokens，留足余量
 
 TIER_TOP = "openai/gpt-oss-120b"
 TIER_UPPER_MID = "openai/gpt-oss-20b"
@@ -17,23 +15,23 @@ TIER_DEBUG = "llama-3.1-8b-instant"
 QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 
-def read_paper(paper_text: str, model: str = TIER_TOP, return_model: bool = False) -> str:
-    """对论文文本进行精读分析，返回 Markdown 格式报告。"""
+def break_down_tasks(
+    requirement: str,
+    tech_stack: str = "",
+    team_size: str = "",
+    model: str = TIER_TOP,
+    return_model: bool = False,
+) -> str:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("Groq API key is required. Set GROQ_API_KEY environment variable.")
     client = Groq(api_key=api_key)
 
-    # 超长截断，保留前后各一半
-    if len(paper_text) > MAX_CHARS:
-        half = MAX_CHARS // 2
-        paper_text = (
-            paper_text[:half]
-            + "\n\n... [内容过长，中间部分已省略] ...\n\n"
-            + paper_text[-half:]
-        )
-
-    user_prompt = USER_PROMPT_TEMPLATE.format(paper_text=paper_text)
+    user_prompt = USER_PROMPT.format(
+        requirement=requirement,
+        tech_stack=tech_stack if tech_stack.strip() else "未提供",
+        team_size=team_size if team_size.strip() else "未提供",
+    )
 
     models = [model] if model else QUALITY_CASCADE
     if model in QUALITY_CASCADE:
@@ -57,5 +55,5 @@ def read_paper(paper_text: str, model: str = TIER_TOP, return_model: bool = Fals
             last_error = str(e)
             continue
 
-    result = f"分析失败：所有模型均不可用。最后错误：{last_error}"
+    result = f"需求拆解失败：所有模型均不可用。最后错误：{last_error}"
     return (result, "") if return_model else result

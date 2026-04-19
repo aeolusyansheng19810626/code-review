@@ -15,7 +15,13 @@ TIER_DEBUG = "llama-3.1-8b-instant"
 QUALITY_CASCADE = [TIER_TOP, TIER_UPPER_MID, TIER_MID, TIER_LOW, TIER_FALLBACK, TIER_DEBUG]
 
 
-def optimize_sql(sql: str, db_type: str = "MySQL", schema_info: str = "", model: str = TIER_TOP) -> str:
+def optimize_sql(
+    sql: str,
+    db_type: str = "MySQL",
+    schema_info: str = "",
+    model: str = TIER_TOP,
+    return_model: bool = False,
+) -> str:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("Groq API key is required. Set GROQ_API_KEY environment variable.")
@@ -43,9 +49,11 @@ def optimize_sql(sql: str, db_type: str = "MySQL", schema_info: str = "", model:
                 max_tokens=4096,
                 temperature=0.2,
             )
-            return chat_completion.choices[0].message.content
+            result = chat_completion.choices[0].message.content
+            return (result, model_name) if return_model else result
         except Exception as e:
             last_error = str(e)
             continue
 
-    return f"SQL 优化失败：所有模型均不可用。最后错误：{last_error}"
+    result = f"SQL 优化失败：所有模型均不可用。最后错误：{last_error}"
+    return (result, "") if return_model else result

@@ -48,6 +48,9 @@ def main():
                 st.error(f"错误: {result['error']}")
                 return
 
+            if result.get("_model"):
+                st.caption(f"使用模型：{result['_model']}")
+
             score = result.get("score", 0)
             summary = result.get("summary", "")
 

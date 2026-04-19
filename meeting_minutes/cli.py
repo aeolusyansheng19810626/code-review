@@ -34,7 +34,9 @@ def main():
     print(f"正在生成{'要点摘要' if args.mode == 'brief' else '完整纪要'}...")
     from meeting_minutes.summarizer import summarize
 
-    result = summarize(transcript, mode=args.mode, model=args.model)
+    result, used_model = summarize(transcript, mode=args.mode, model=args.model, return_model=True)
+    if used_model:
+        print(f"使用模型：{used_model}")
 
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:

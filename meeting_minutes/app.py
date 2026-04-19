@@ -21,9 +21,11 @@ if st.button("生成纪要", type="primary"):
     with st.spinner("AI 正在生成纪要，请稍候…"):
         from meeting_minutes.summarizer import summarize
 
-        result = summarize(transcript, mode=mode_key)
+        result, used_model = summarize(transcript, mode=mode_key, return_model=True)
 
     st.markdown("---")
+    if used_model:
+        st.caption(f"使用模型：{used_model}")
     st.markdown(result)
 
     st.download_button(

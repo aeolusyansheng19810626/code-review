@@ -13,6 +13,9 @@ def display_solutions(result: dict):
         console.print(f"[bold red]Error:[/bold red] {result['error']}")
         return
 
+    if result.get('_model'):
+        console.print(f"[dim]Model: {result['_model']}[/dim]")
+
     console.print(Panel(f"[bold cyan]Requirement:[/bold cyan] {result['requirement']}", border_style="blue"))
     
     panels = []
@@ -37,6 +40,9 @@ def display_evaluation(result: dict):
     if "error" in result:
         console.print(f"[bold red]Error:[/bold red] {result['error']}")
         return
+
+    if result.get('_model'):
+        console.print(f"[dim]Model: {result['_model']}[/dim]")
 
     score_color = "green" if result['overall_score'] >= 8 else "yellow" if result['overall_score'] >= 6 else "red"
     console.print(Panel(f"[bold]Solution:[/bold] {result['solution_name']}\n[bold]Overall Score:[/bold] [{score_color}]{result['overall_score']}/10[/{score_color}]\n[bold]Decision:[/bold] {result['decision']}", border_style="blue"))
